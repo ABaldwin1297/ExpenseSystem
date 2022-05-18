@@ -77,6 +77,7 @@ namespace ExpenseSystem.Controllers
             try
             {
                 await _context.SaveChangesAsync();
+                await ChangeExpenseDue(expense.Id);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -102,14 +103,61 @@ namespace ExpenseSystem.Controllers
 
         [HttpPut("Approve")]
         public async Task<IActionResult> Approve(Expense expense) {
+            var rc = await PutExpense(expense.Id, expense);
+            var prevstatus = expense.Status;
+            if(prevstatus != "Approved") {
             expense.Status = "Approved";
-            return await PutExpense(expense.Id, expense);
+                await ChangeExpenseDue(expense.Id);
+            }
+            return rc;
+            
         }
 
         [HttpPut("Reject")]
         public async Task<IActionResult> Reject(Expense expense) {
-            expense.Status = "Rejected";
-            return await PutExpense(expense.Id, expense);
+            var rc = await PutExpense(expense.Id, expense);
+            var prevstatus = expense.Status;
+            if(prevstatus != "Rejected") {
+                expense.Status = "Rejected";
+                await ChangeExpenseDue(expense.Id);
+            }
+            return rc;
+        }
+
+        // this is just an internal method
+        private async Task<IActionResult> ChangeExpenseDue(int expenseId) {
+            var expense = await _context.Expenses.FindAsync(expenseId);
+            var employee = await _context.Employees.FindAsync(expense.EmployeeId);
+            if(expense == null) {
+                return NotFound();
+            }
+            if(expense.Status == "Approved") {
+                employee.ExpensesDue = expense.Total + employee.ExpensesDue;
+                await _context.SaveChangesAsync();
+            }
+            if(expense.Status == "Rejected") {
+                employee.ExpensesDue = employee.ExpensesDue - expense.Total;
+                await _context.SaveChangesAsync();
+                
+            }
+            return Ok();
+        }
+
+
+        [HttpPut("PayExpense/{Id}")]
+        public async Task<IActionResult> PayExpense(int Id) {
+            var expense = await _context.Expenses.FindAsync(Id);
+            var employee = await _context.Employees.FindAsync(expense!.EmployeeId);
+            if(expense == null) {
+                throw new Exception($"expense {Id} not found");
+            }
+            if (expense.Status == "Approved") {
+                employee!.ExpensesPaid = expense.Total + employee.ExpensesPaid;
+                employee!.ExpensesDue = employee.ExpensesDue - expense.Total;
+                expense.Status = "Paid";
+                await _context.SaveChangesAsync();
+            }
+            return Ok();
         }
 
 
@@ -126,6 +174,7 @@ namespace ExpenseSystem.Controllers
           }
             _context.Expenses.Add(expense);
             await _context.SaveChangesAsync();
+            await ChangeExpenseDue(expense.Id);
 
             return CreatedAtAction("GetExpense", new { id = expense.Id }, expense);
         }
@@ -143,9 +192,9 @@ namespace ExpenseSystem.Controllers
             {
                 return NotFound();
             }
-
             _context.Expenses.Remove(expense);
             await _context.SaveChangesAsync();
+     
 
             return NoContent();
         }

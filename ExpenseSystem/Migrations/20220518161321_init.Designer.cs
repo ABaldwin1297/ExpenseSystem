@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ExpenseSystem.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20220517183232_Added Expenseline")]
-    partial class AddedExpenseline
+    [Migration("20220518161321_init")]
+    partial class init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -38,6 +38,12 @@ namespace ExpenseSystem.Migrations
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
+
+                    b.Property<decimal>("ExpensesDue")
+                        .HasColumnType("decimal (9,2)");
+
+                    b.Property<decimal>("ExpensesPaid")
+                        .HasColumnType("decimal (9,2)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -70,12 +76,8 @@ namespace ExpenseSystem.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
-                    b.Property<string>("EmployeeId")
-                        .IsRequired()
+                    b.Property<int>("EmployeeId")
                         .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.Property<int>("EmployeeId1")
                         .HasColumnType("int");
 
                     b.Property<string>("Status")
@@ -88,7 +90,7 @@ namespace ExpenseSystem.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EmployeeId1");
+                    b.HasIndex("EmployeeId");
 
                     b.ToTable("Expenses");
                 });
@@ -144,7 +146,7 @@ namespace ExpenseSystem.Migrations
                 {
                     b.HasOne("ExpenseSystem.Models.Employee", "Employee")
                         .WithMany()
-                        .HasForeignKey("EmployeeId1")
+                        .HasForeignKey("EmployeeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

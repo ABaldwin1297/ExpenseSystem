@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ExpenseSystem.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20220517183034_Added Expenseline & Item")]
-    partial class AddedExpenselineItem
+    [Migration("20220518182113_remove stringlength in Expense")]
+    partial class removestringlengthinExpense
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -38,6 +38,12 @@ namespace ExpenseSystem.Migrations
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
+
+                    b.Property<decimal>("ExpensesDue")
+                        .HasColumnType("decimal (9,2)");
+
+                    b.Property<decimal>("ExpensesPaid")
+                        .HasColumnType("decimal (9,2)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -70,12 +76,7 @@ namespace ExpenseSystem.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
-                    b.Property<string>("EmployeeId")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.Property<int>("EmployeeId1")
+                    b.Property<int>("EmployeeId")
                         .HasColumnType("int");
 
                     b.Property<string>("Status")
@@ -88,9 +89,35 @@ namespace ExpenseSystem.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EmployeeId1");
+                    b.HasIndex("EmployeeId");
 
                     b.ToTable("Expenses");
+                });
+
+            modelBuilder.Entity("ExpenseSystem.Models.ExpenseLine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<int>("ExpenseId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExpenseId");
+
+                    b.HasIndex("ItemId");
+
+                    b.ToTable("ExpensesLines");
                 });
 
             modelBuilder.Entity("ExpenseSystem.Models.Item", b =>
@@ -118,11 +145,30 @@ namespace ExpenseSystem.Migrations
                 {
                     b.HasOne("ExpenseSystem.Models.Employee", "Employee")
                         .WithMany()
-                        .HasForeignKey("EmployeeId1")
+                        .HasForeignKey("EmployeeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("ExpenseSystem.Models.ExpenseLine", b =>
+                {
+                    b.HasOne("ExpenseSystem.Models.Expense", "Expenses")
+                        .WithMany()
+                        .HasForeignKey("ExpenseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ExpenseSystem.Models.Item", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Expenses");
+
+                    b.Navigation("Item");
                 });
 #pragma warning restore 612, 618
         }

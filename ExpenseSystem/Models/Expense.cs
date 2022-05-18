@@ -12,9 +12,8 @@ namespace ExpenseSystem.Models {
         public string Status { get; set; } = null!;
         [Column(TypeName = "decimal(9,2)")]
         public decimal Total { get; set; } = 0;
-        [StringLength(30)]
-        public string EmployeeId { get; set; } = null!;
-        public virtual Employee Employee { get; set; } = null!;
+        public int EmployeeId { get; set; } = 0;
+        public virtual Employee? Employee { get; set; } = null;
        
     }
 }
